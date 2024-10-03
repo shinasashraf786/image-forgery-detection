@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgery Detection</title>
+    <style>
+        /* Body styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Left section styles */
+        #left-section {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        /* Right section styles */
+        #right-section {
+            flex: 1;
+            padding-top: 200px;
+        }
+
+        /* Background overlay */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("/static/bg1.png");
+            background-size: cover;
+            background-position: center;
+            opacity: 0.4; /* Adjust the opacity for transparency */
+            z-index: -1; /* Ensure the overlay is behind other content */
+        }
+
+        /* Header styles */
+        h1 {
+            color: #333;
+            text-align: left;
+            margin-top: 20px;
+            padding-bottom: 70px;
+        }
+
+        /* Form styles */
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative; /* Required for z-index */
+            z-index: 1; /* Ensure the form is above the background overlay */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        input[type="button"] {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        /* Prediction buttons */
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #prediction-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        /* Output textarea */
+        #output {
+            width: 100%;
+            height: 100px;
+            margin-top: 20px;
+            padding: 10px;
+            resize: none;
+            margin: 0 auto; /* Center the output */
+        }
+
+        #result-section {
+            max-width: 200px;
+            margin: 20px auto; /* Center the result section */
+            background-color: #fff;
+            padding: 20px;
+            position: relative; /* Required for z-index */
+            z-index: 1; /* Ensure the result section is above the background overlay */
+        }
+    </style>
+</head>
+<body>
+    <div id="left-section">
+        <h1>Forgery Detection</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <label for="file">Choose an image:</label>
+            <input type="file" name="file" id="file" accept=".jpg, .jpeg, .png" required>
+            <br>
+            <input type="button" id="upload-btn" value="Upload Image">
+        </form>
+        <div id="prediction-section">
+            <h2>Predictions:</h2>
+            <button onclick="predict('xception')">Predict with Xception</button>
+            <button onclick="predict('densenet')">Predict with DenseNet</button>
+            <button onclick="predict('vgg16')">Predict with VGG16</button>
+        </div>
+    </div>
+    <div id="right-section">
+        <div id="result-section">
+            <p id="output" readonly></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("upload-btn").addEventListener("click", function() {
+            var formData = new FormData();
+            var fileInput = document.getElementById("file");
+            var file = fileInput.files[0];
+            formData.append("file", file);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/upload", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    // Clear the input field after successful upload
+                    fileInput.value = "";
+                }
+            };
+            xhr.send(formData);
+        });
+
+        function predict(model) {
+            var fileInput = document.getElementById("file");
+            var file = fileInput.files[0];
+            if (!file) {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("file", file);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/predict/" + model, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var outputField = document.getElementById("output");
+                    outputField.value = xhr.responseText;
+                }
+            };
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>
